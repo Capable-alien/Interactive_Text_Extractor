@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Recognition</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        #image-container {
+            position: relative;
+            display: inline-block;
+        }
+        .text-overlay {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7); /* Semi-transparent background */
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        .text-overlay:hover {
+            background: rgba(255, 255, 0, 0.7); /* Highlight on hover */
+        }
+        .output-image {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Upload Image for Text Recognition</h1>
+        <form id="upload-form" class="text-center mb-4">
+            <input type="file" name="image" accept="image/*" required class="form-control-file mb-2">
+            <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+        <div id="result" class="alert alert-info" style="display:none;"></div>
+        <button id="copy-text" class="btn btn-success" style="display:none;">Copy All Text</button>
+        <textarea id="recognized-text" class="form-control" rows="5" style="display:none;"></textarea>
+        <div id="image-container" style="display:none;">
+            <img id="output-image" class="output-image" />
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await response.json();
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerText = data.data.length > 0 ? 'Text recognized successfully!' : 'No text recognized.';
+
+            const outputImage = document.getElementById('output-image');
+            outputImage.src = data.output_image;
+            document.getElementById('image-container').style.display = 'block';
+            document.getElementById('image-container').style.position = 'relative';
+            document.getElementById('copy-text').style.display = 'block';
+            document.getElementById('recognized-text').style.display = 'block';
+
+            // Wait for the image to load to get its dimensions
+            outputImage.onload = () => {
+                const imgWidth = outputImage.naturalWidth;
+                const imgHeight = outputImage.naturalHeight;
+                const displayedWidth = outputImage.clientWidth;
+                const displayedHeight = outputImage.clientHeight;
+
+                const widthScale = displayedWidth / imgWidth;
+                const heightScale = displayedHeight / imgHeight;
+
+                // Create overlays for recognized text
+                let recognizedText = '';
+                data.data.forEach(box => {
+                    recognizedText += box.text + ' ';  // Concatenate recognized text
+                    const overlay = document.createElement('div');
+                    overlay.className = 'text-overlay';
+                    overlay.innerText = box.text;
+
+                    overlay.style.left = (box.x * widthScale) + 'px';
+                    overlay.style.top = (box.y * heightScale) + 'px';
+                    overlay.style.width = (box.w * widthScale) + 'px';
+                    overlay.style.height = (box.h * heightScale) + 'px';
+
+                    overlay.onclick = () => {
+                        alert('You selected: ' + box.text);
+                    };
+
+                    document.getElementById('image-container').appendChild(overlay);
+                });
+
+                // Populate the textarea with recognized text
+                document.getElementById('recognized-text').value = recognizedText;
+            };
+        };
+
+        // Copy recognized text to clipboard
+        document.getElementById('copy-text').onclick = () => {
+            const textArea = document.getElementById('recognized-text');
+            textArea.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard: ' + textArea.value);
+        };
+    </script>
+</body>
+</html>
