@@ -15,4 +15,5 @@ A web application that allows users to upload images containing text and interac
 - **OpenCV**: Image processing.
 - **HTML, CSS, JavaScript**: Frontend interface with interactive elements.
 
-
+Tesseract OCR is installed from the link below,
+https://github.com/UB-Mannheim/tesseract/wiki
