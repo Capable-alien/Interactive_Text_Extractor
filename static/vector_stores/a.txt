@@ -1,1 +1,0 @@
-It is optional as it can be used for persistent storage of vectors.
