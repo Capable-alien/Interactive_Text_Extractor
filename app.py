@@ -155,8 +155,8 @@ async def upload_image(file: UploadFile = File(...)):
             vector_store_path = os.path.join(VECTOR_STORE_PATH, f"vs_{uuid.uuid4()}")
             current_vector_store = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
             
-            # Save vector store (optional for persistence)
-            # current_vector_store.save_local(vector_store_path)
+            # Save vector store
+            current_vector_store.save_local(vector_store_path)
         
         return JSONResponse({
             'data': recognized_data, 
